@@ -46,7 +46,7 @@ from kotaemon.indices.ingests.files import (
     custom_reader
 )
 from kotaemon.indices.rankings import BaseReranking, LLMReranking, LLMTrulensScoring
-from kotaemon.indices.splitters import BaseSplitter, TokenSplitter
+from kotaemon.indices.splitters import BaseSplitter, TokenSplitter,get_doc_structure_chunker
 
 from .base import BaseFileIndexIndexing, BaseFileIndexRetriever
 
@@ -669,9 +669,11 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
     """
 
     reader_mode: str = Param("default", help="The reader mode")
+    chunking_mode: str = Param("default", help="The chunking mode for text splitting")
     embedding: BaseEmbeddings
     run_embedding_in_thread: bool = False
     splitter: BaseSplitter | None = None
+
     @Param.auto(depends_on="reader_mode")
     def readers(self):
         readers = deepcopy(KH_DEFAULT_FILE_EXTRACTORS)
@@ -753,18 +755,22 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
             return None
         elif self.chunking_mode == "semantic":
             # Semantic chunking (requires embedding model)
-       
+            
                 return None
         elif self.chunking_mode == "recursive":
             # Recursive text splitting
             return None
         elif self.chunking_mode == "llm_chunking":
             # LLM-based text chunking using Llama Index's LLMNodeParser
-           
+            
                 return None
         elif self.chunking_mode == "doc_structure":
             # Document structure-based chunking
-                return None
+            
+            return get_doc_structure_chunker(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap
+        )
         else:
             # Default to TokenSplitter if mode not recognized
             print(f"Chunking mode '{self.chunking_mode}' not recognized, using default")
