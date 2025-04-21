@@ -43,10 +43,10 @@ from kotaemon.indices.ingests.files import (
     docling_reader,
     unstructured,
     web_reader,
-    custom_reader
+    custom_reader,
 )
 from kotaemon.indices.rankings import BaseReranking, LLMReranking, LLMTrulensScoring
-from kotaemon.indices.splitters import BaseSplitter, TokenSplitter
+from kotaemon.indices.splitters import BaseSplitter, TokenSplitter, RecursiveSplitter
 
 from .base import BaseFileIndexIndexing, BaseFileIndexRetriever
 
@@ -241,7 +241,6 @@ class DocumentRetrievalPipeline(BaseFileIndexRetriever):
                 "choices": reranking_llm_choices,
                 "special_type": "llm",
             },
-
             "num_retrieval": {
                 "name": "Number of document chunks to retrieve",
                 "value": 10,
@@ -669,9 +668,11 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
     """
 
     reader_mode: str = Param("default", help="The reader mode")
+    chunking_mode: str = Param("default", help="The chunking mode")
     embedding: BaseEmbeddings
     run_embedding_in_thread: bool = False
     splitter: BaseSplitter | None = None
+
     @Param.auto(depends_on="reader_mode")
     def readers(self):
         readers = deepcopy(KH_DEFAULT_FILE_EXTRACTORS)
@@ -749,22 +750,27 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
             )
         elif self.chunking_mode == "fix_size":
             # Fixed-size text chunking
-            
+
             return None
         elif self.chunking_mode == "semantic":
             # Semantic chunking (requires embedding model)
-       
-                return None
+
+            return None
         elif self.chunking_mode == "recursive":
             # Recursive text splitting
-            return None
+            # Recursive text splitting
+            return RecursiveSplitter(
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+                separators=separators,
+            )
         elif self.chunking_mode == "llm_chunking":
             # LLM-based text chunking using Llama Index's LLMNodeParser
-           
-                return None
+
+            return None
         elif self.chunking_mode == "doc_structure":
             # Document structure-based chunking
-                return None
+            return None
         else:
             # Default to TokenSplitter if mode not recognized
             print(f"Chunking mode '{self.chunking_mode}' not recognized, using default")
