@@ -46,7 +46,7 @@ from kotaemon.indices.ingests.files import (
     custom_reader
 )
 from kotaemon.indices.rankings import BaseReranking, LLMReranking, LLMTrulensScoring
-from kotaemon.indices.splitters import BaseSplitter, TokenSplitter,get_doc_structure_chunker
+from kotaemon.indices.splitters import BaseSplitter, TokenSplitter,get_doc_structure_chunker,get_semantic_chunker
 
 from .base import BaseFileIndexIndexing, BaseFileIndexRetriever
 
@@ -756,7 +756,10 @@ class IndexDocumentPipeline(BaseFileIndexIndexing):
         elif self.chunking_mode == "semantic":
             # Semantic chunking (requires embedding model)
             
-                return None
+            return get_semantic_chunker(
+            chunk_size=chunk_size, 
+            chunk_overlap=chunk_overlap,
+        )
         elif self.chunking_mode == "recursive":
             # Recursive text splitting
             return None
